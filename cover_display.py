@@ -65,7 +65,7 @@ class CoverDisplay:
         self.display_url: Optional[str] = None
         self.display_process: Optional[str] = None
         self.token_generator: TokenGenerator = TokenGenerator(client_id, client_secret, refresh_token)
-        self.temp_file = 'cover.jpg'
+        self.temp_file = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'cover.jpg')
 
     def start_displaying(self):
         log.info('Start displaying cover art')
@@ -87,9 +87,9 @@ class CoverDisplay:
                     with open(self.temp_file, 'wb') as f:
                         shutil.copyfileobj(image_r.raw, f)
                     self.display_url = display_url
-                    # if self.display_process:  # we need to refresh the image
-                    #     self.display_process.kill()
-                    # self.display_process = subprocess.Popen(['fbi', 'cover.jpg'])
+                    if self.display_process:  # we need to refresh the image
+                        self.display_process.kill()
+                    self.display_process = subprocess.Popen(['fbi', self.temp_file])
                 time.sleep(10)  # wait 10 secs for updates
 
             except TokenException as e:
@@ -111,7 +111,7 @@ if __name__ == '__main__':
     log.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
     fh = RotatingFileHandler(
-        filename='cover_display.log',
+        filename=os.path.join(os.path.abspath(os.path.dirname(__file__)), 'cover_display.log'),
         maxBytes=1024 * 10,
     )
     fh.setFormatter(formatter)
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     log.addHandler(ch)
 
     log.info('Waiting 20 seconds for network')
-    # time.sleep(20)
+    time.sleep(20)
     log.info('Lets go!')
     try:
         cd = CoverDisplay(
