@@ -1,5 +1,7 @@
 .idea/
 *.log
+secrets.env
+cover.jpg
 
 # Created by .ignore support plugin (hsz.mobi)
 ### JetBrains template

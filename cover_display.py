@@ -50,12 +50,12 @@ class TokenGenerator:
             raise TokenException(f'Could not obtain new spotify token: {r.text}')
         j = r.json()
         self._token = j['access_token']
-        self._expires = datetime.now() + timedelta(seconds=j['expires_in'])
+        self._expires = datetime.now() + timedelta(seconds=int(j['expires_in'] - 100))
         log.info('Generated new access token')
 
     @property
     def token(self) -> str:
-        if not self._token or not self._expires or self._expires > datetime.now():
+        if (not self._token) or (not self._expires) or (self._expires > datetime.now()):
             self.generate_new_token()
         return self._token
 
@@ -65,20 +65,18 @@ class CoverDisplay:
         self.display_url: Optional[str] = None
         self.display_process: Optional[str] = None
         self.token_generator: TokenGenerator = TokenGenerator(client_id, client_secret, refresh_token)
-        self.now_playing_request: Callable = partial(
-            requests.get,
-            'https://api.spotify.com/v1/me/player/currently-playing',
-            headers={
-                'Authorization': f'Bearer {self.token_generator.token}',
-            }
-        )
         self.temp_file = 'cover.jpg'
 
     def start_displaying(self):
         log.info('Start displaying cover art')
         while True:
             try:
-                r: requests.Response = self.now_playing_request()
+                r: requests.Response = requests.get(
+                    'https://api.spotify.com/v1/me/player/currently-playing',
+                    headers={
+                        'Authorization': f'Bearer {self.token_generator.token}',
+                    }
+                )
                 if not r.ok:
                     raise PlayingException(f'Could not access now playing: {r.text}')
                 j = r.json()
@@ -101,7 +99,7 @@ class CoverDisplay:
                 log.error(f'Could not receive current playing track! Back off 1 minute! {e}')
                 time.sleep(1 * 60)
             except KeyboardInterrupt:
-                log.error(f'Stop displaying')
+                log.info(f'Stop displaying')
                 break
             # except Exception as e:
             #     logging.critical(f'Uncaught exception: {e} - back off 1h')
