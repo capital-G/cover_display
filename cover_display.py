@@ -55,7 +55,7 @@ class TokenGenerator:
 
     @property
     def token(self) -> str:
-        if (not self._token) or (not self._expires) or (self._expires > datetime.now()):
+        if (not self._token) or (not self._expires) or (self._expires < datetime.now()):
             self.generate_new_token()
         return self._token
 
@@ -87,9 +87,9 @@ class CoverDisplay:
                     with open(self.temp_file, 'wb') as f:
                         shutil.copyfileobj(image_r.raw, f)
                     self.display_url = display_url
-                    if self.display_process:  # we need to refresh the image
-                        self.display_process.kill()
-                    self.display_process = subprocess.Popen(['fbi', 'cover.jpg'])
+                    # if self.display_process:  # we need to refresh the image
+                    #     self.display_process.kill()
+                    # self.display_process = subprocess.Popen(['fbi', 'cover.jpg'])
                 time.sleep(10)  # wait 10 secs for updates
 
             except TokenException as e:
@@ -124,7 +124,7 @@ if __name__ == '__main__':
     log.addHandler(ch)
 
     log.info('Waiting 20 seconds for network')
-    time.sleep(20)
+    # time.sleep(20)
     log.info('Lets go!')
     try:
         cd = CoverDisplay(
